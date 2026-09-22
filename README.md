@@ -103,7 +103,7 @@ Marca la raíz de un proyecto Codex y registra de dónde salió:
 | `schemaVersion` | Versión del formato de este archivo. |
 | `harness.version` / `commit` | Release (tag) de la plantilla usada y su commit exacto. |
 | `harness.repo` | Repo de la plantilla. |
-| `brand.name` | Nombre de la marca. `brand.codexVersion`: versión del formato de marca Codex. |
+| `brand.name` / `codexVersion` | Nombre de la marca y su propia versión Codex (semver, empieza en `0.1.0`; sube a medida que se aprueban foundations y frameworks). |
 | `project.*` | Nombre de carpeta, propósito y fecha de creación (UTC, ISO-8601). |
 | `createdWith` | Plugin y versión que lo crearon (leídos de `plugin.json`). |
 
