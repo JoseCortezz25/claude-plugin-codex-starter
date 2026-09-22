@@ -1,0 +1,14 @@
+{
+  "name": "codex-brand-marketplace",
+  "owner": {
+    "name": "Codex team"
+  },
+  "description": "Private, org-only marketplace for the Codex brand harness tooling.",
+  "plugins": [
+    {
+      "name": "codex-brand",
+      "source": "./",
+      "description": "Scaffold new Codex brand projects from the harness template and protect them from parent-folder sessions."
+    }
+  ]
+}
