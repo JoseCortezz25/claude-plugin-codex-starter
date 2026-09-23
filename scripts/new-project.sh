@@ -6,6 +6,11 @@
 #
 # Env:
 #   CODEX_TEMPLATE_REPO  owner/repo of the harness template (default: JoseCortezz25/delivery-system-starter)
+#   CODEX_TEMPLATE_URL   git URL used when GitHub CLI is unavailable (default: https://github.com/<repo>.git;
+#                        set to git@github.com:<repo>.git to use SSH)
+#
+# Uses GitHub CLI (gh) when it is installed and logged in; otherwise falls back to plain git with the
+# user's own credentials (credential helper / keychain, or SSH via CODEX_TEMPLATE_URL).
 #
 # On success the last line of stdout is: CODEX_PROJECT_PATH=<absolute path>
 set -euo pipefail
@@ -47,7 +52,7 @@ done
 [[ "$SLUG" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]] || die "--slug must be kebab-case (a-z, 0-9, '-'): got '$SLUG'"
 
 # --- Tooling -----------------------------------------------------------------
-for bin in git gh jq; do
+for bin in git jq; do
   command -v "$bin" >/dev/null 2>&1 || die "'$bin' is required but not installed."
 done
 
@@ -56,8 +61,14 @@ PLUGIN_NAME="$(jq -r '.name // empty' "$PLUGIN_MANIFEST")"
 PLUGIN_VERSION="$(jq -r '.version // empty' "$PLUGIN_MANIFEST")"
 [[ -n "$PLUGIN_NAME" ]] || die "could not read plugin name from $PLUGIN_MANIFEST"
 
-if ! gh auth status >/dev/null 2>&1; then
-  die "GitHub CLI is not logged in. Run 'gh auth login' with an account that has access to $TEMPLATE_REPO."
+TEMPLATE_URL="${CODEX_TEMPLATE_URL:-https://github.com/$TEMPLATE_REPO.git}"
+if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+  USE_GH=1
+else
+  USE_GH=0
+  echo "GitHub CLI not available or not logged in; using plain git ($TEMPLATE_URL)."
+  # Never hang on an interactive credential prompt: fail fast with a clear message instead.
+  export GIT_TERMINAL_PROMPT=0
 fi
 
 GIT_USER_NAME="$(git config --get user.name || true)"
@@ -90,16 +101,27 @@ if [[ -e "$TARGET" ]]; then
 fi
 
 # --- Access + version --------------------------------------------------------
-if ! gh repo view "$TEMPLATE_REPO" --json name >/dev/null 2>&1; then
-  die "cannot access the harness template repo '$TEMPLATE_REPO'. Make sure your GitHub account has access to this private repository."
-fi
-
-if [[ -z "$VERSION" ]]; then
-  if ! VERSION="$(gh release view --repo "$TEMPLATE_REPO" --json tagName --jq .tagName 2>/dev/null)" || [[ -z "$VERSION" ]]; then
-    die "the harness has no published release yet ($TEMPLATE_REPO). Publish a GitHub release of the template, or pass --version <tag>."
+NO_RELEASE_MSG="the harness has no published release yet ($TEMPLATE_REPO). Publish a GitHub release of the template, or pass --version <tag>."
+if [[ $USE_GH -eq 1 ]]; then
+  if ! gh repo view "$TEMPLATE_REPO" --json name >/dev/null 2>&1; then
+    die "cannot access the harness template repo '$TEMPLATE_REPO'. Make sure your GitHub account has access to this private repository."
+  fi
+  if [[ -z "$VERSION" ]]; then
+    if ! VERSION="$(gh release view --repo "$TEMPLATE_REPO" --json tagName --jq .tagName 2>/dev/null)" || [[ -z "$VERSION" ]]; then
+      die "$NO_RELEASE_MSG"
+    fi
+  elif ! gh release view "$VERSION" --repo "$TEMPLATE_REPO" --json tagName >/dev/null 2>&1; then
+    die "release '$VERSION' was not found in $TEMPLATE_REPO."
   fi
 else
-  if ! gh release view "$VERSION" --repo "$TEMPLATE_REPO" --json tagName >/dev/null 2>&1; then
+  # Without gh, releases are resolved from their git tags (every published release creates one).
+  if ! REMOTE_TAGS="$(git ls-remote --tags --refs "$TEMPLATE_URL" 2>/dev/null | sed 's#.*refs/tags/##')"; then
+    die "cannot access '$TEMPLATE_URL' with git. Make sure your GitHub account has access to this private repository and git has credentials for it: run 'git clone $TEMPLATE_URL' once in a terminal to store them (use a GitHub personal access token as the password), or set CODEX_TEMPLATE_URL=git@github.com:$TEMPLATE_REPO.git to use SSH."
+  fi
+  if [[ -z "$VERSION" ]]; then
+    VERSION="$(printf '%s\n' "$REMOTE_TAGS" | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)"
+    [[ -n "$VERSION" ]] || die "$NO_RELEASE_MSG"
+  elif ! printf '%s\n' "$REMOTE_TAGS" | grep -qxF "$VERSION"; then
     die "release '$VERSION' was not found in $TEMPLATE_REPO."
   fi
 fi
@@ -116,11 +138,15 @@ cleanup_on_error() {
 }
 trap cleanup_on_error EXIT
 
-# Clone over HTTPS with gh as the credential helper, so it works with the user's `gh auth login`
-# regardless of their SSH setup or gh's git_protocol preference.
-git -c credential.helper= -c 'credential.helper=!gh auth git-credential' -c advice.detachedHead=false \
-  clone --depth 1 --branch "$VERSION" --quiet "https://github.com/$TEMPLATE_REPO.git" "$TARGET" \
-  || die "clone of $TEMPLATE_REPO@$VERSION failed."
+if [[ $USE_GH -eq 1 ]]; then
+  # HTTPS with gh as the credential helper: works with `gh auth login` regardless of SSH setup.
+  git -c credential.helper= -c 'credential.helper=!gh auth git-credential' -c advice.detachedHead=false \
+    clone --depth 1 --branch "$VERSION" --quiet "https://github.com/$TEMPLATE_REPO.git" "$TARGET" \
+    || die "clone of $TEMPLATE_REPO@$VERSION failed."
+else
+  git -c advice.detachedHead=false clone --depth 1 --branch "$VERSION" --quiet "$TEMPLATE_URL" "$TARGET" \
+    || die "clone of $TEMPLATE_URL@$VERSION failed. Check that git has credentials for this private repository."
+fi
 
 COMMIT_SHA="$(git -C "$TARGET" rev-parse HEAD)"
 rm -rf "$TARGET/.git"
