@@ -40,7 +40,7 @@ Only add `--version <tag>` if the user explicitly asked for a specific harness r
 **If the script fails** (non-zero exit): explain the error to the user plainly in Spanish, using the script's message. Common cases:
 
 - The harness has no published release yet → a maintainer must publish a GitHub release of the template first.
-- No access / not logged in to `gh` → run `gh auth login` with an account that has access to the private template repo.
+- No access → the user's GitHub account needs access to the private template repo. With GitHub CLI: `gh auth login`. Without it: run `git clone https://github.com/JoseCortezz25/delivery-system-starter.git` once in a terminal to store credentials (a GitHub personal access token as the password), or use SSH via `CODEX_TEMPLATE_URL=git@github.com:JoseCortezz25/delivery-system-starter.git`.
 - git `user.name`/`user.email` not set → configure them.
 - The target folder already exists and is not empty, or the parent is inside another Codex project → choose another name or location.
 

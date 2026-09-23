@@ -14,8 +14,12 @@ operen desde una carpeta padre.
 
 - **Claude Code** instalado y autenticado.
 - **git** con `user.name` y `user.email` configurados (se usan para el commit inicial del proyecto).
-- **GitHub CLI (`gh`)** con sesión iniciada (`gh auth login`) y acceso a **ambos** repos privados:
-  este plugin y la plantilla del arnés.
+- Acceso a **ambos** repos privados en GitHub: este plugin y la plantilla del arnés.
+- **GitHub CLI (`gh`)** con sesión iniciada (`gh auth login`) — **opcional**. Si no está instalado o
+  no tiene sesión, el plugin usa **git normal** con tus credenciales: la primera vez corre
+  `git clone https://github.com/JoseCortezz25/delivery-system-starter.git` en una terminal para que git
+  guarde tu acceso (usuario de GitHub + *personal access token* como contraseña), o usa SSH definiendo
+  `CODEX_TEMPLATE_URL=git@github.com:JoseCortezz25/delivery-system-starter.git`.
 - **jq**.
 
 ## Instalación (miembros de la organización)
@@ -71,10 +75,10 @@ El asistente pregunta, una por una: nombre de la marca, nombre de la carpeta (pr
 ubicación padre (propone el directorio actual) y propósito. Luego ejecuta
 `scripts/new-project.sh`, que:
 
-1. Verifica `git`, `gh`, `jq`, la sesión de `gh`, el acceso a la plantilla y tu identidad de git.
-2. Resuelve la versión: `--version <tag>` o la **última release** de la plantilla. Si no hay release, falla (nunca usa `main`).
+1. Verifica `git`, `jq`, tu identidad de git y el acceso a la plantilla. Usa `gh` si está instalado y con sesión; si no, git normal.
+2. Resuelve la versión: `--version <tag>` o la **última release** de la plantilla (sin `gh`, el tag semver más alto, que es el que crea cada release). Si no hay release, falla (nunca usa `main`).
 3. Rechaza la operación si la carpeta destino existe y no está vacía, o si la ubicación padre está dentro de otro proyecto Codex.
-4. Clona la release por HTTPS (con la sesión de `gh`), elimina su historial, hace `git init`, escribe `codex-lock.json` y crea el commit inicial.
+4. Clona la release (con `gh`: por HTTPS con su sesión; sin `gh`: con la URL y las credenciales de git), elimina su historial, hace `git init`, escribe `codex-lock.json` y crea el commit inicial.
 
 Al terminar, **abre una sesión nueva dentro del proyecto**:
 
