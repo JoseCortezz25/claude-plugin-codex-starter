@@ -1,5 +1,9 @@
 {
   "name": "codex-brand",
   "version": "0.1.0",
-  "description": "Scaffold new Codex brand projects from the private harness template (pinned to a GitHub release) and guard against operating brand projects from a parent folder."
+  "description": "Scaffold new Codex brand projects from the private harness template (pinned to a GitHub release) and guard against operating brand projects from a parent folder.",
+  "author": {
+    "name": "JoseCortezz25",
+    "url": "https://github.com/JoseCortezz25"
+  }
 }
