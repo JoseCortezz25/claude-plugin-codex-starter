@@ -39,6 +39,16 @@ Para autenticarte con GitHub hay dos opciones:
 
 Reinicia Claude Code.
 
+Activa la actualización automática (recomendado, una sola vez): `/plugin` → pestaña **Marketplaces** →
+`codex-brand-marketplace` → **Enable auto-update**. Sin esto, actualiza a mano cuando haya una versión
+nueva:
+
+```bash
+claude plugin update codex-brand@codex-brand-marketplace
+```
+
+> Actualizar el plugin no modifica los proyectos que ya creaste: solo cambia cómo se crean los nuevos.
+
 **3. Crea el proyecto.** Abre Claude Code en la carpeta donde quieres guardarlo (por ejemplo
 `~/Proyectos`), escribe `/codex-brand:new` y responde las preguntas: marca, nombre de carpeta,
 ubicación y propósito.
