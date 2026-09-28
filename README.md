@@ -167,8 +167,6 @@ arnés, modelo, fecha), te pregunta solo lo que falta, **una pregunta a la vez**
 previa. Solo envía si confirmas. El reporte llega al canal del equipo como un archivo HTML
 autocontenido, generado por `scripts/send_report.py` (Python 3, sin dependencias).
 
-- **Destino:** el webhook del canal se lee de `config/report.json` (`webhookUrl`); se puede reemplazar con la
-  variable de entorno `CODEX_REPORT_WEBHOOK_URL`.
 - **Si no se puede enviar** (sin red, proxy, webhook inválido), el HTML queda guardado en
   `~/.codex-ocx/reports-pending/` y se reintenta automáticamente la próxima vez que envíes un reporte o
   feedback. Si tu red usa proxy, debe permitir `*.powerplatform.com`.
