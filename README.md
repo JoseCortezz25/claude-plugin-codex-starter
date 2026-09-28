@@ -5,6 +5,7 @@ arnés (`JoseCortezz25/delivery-system-starter`, repo privado) y proteger esos p
 operen desde una carpeta padre.
 
 - `/codex-brand:new` — crea un proyecto de marca nuevo, fijado a una **release** publicada de la plantilla.
+- `/codex-brand:report-bug` y `/codex-brand:feedback` — envían un bug o una sugerencia al equipo Codex.
 - Hooks — detectan si la sesión está dentro de un proyecto Codex o en una carpeta padre, y bloquean
   escrituras en un proyecto de marca desde una sesión que no se abrió en su raíz.
 
@@ -154,6 +155,24 @@ cd "<ruta-del-proyecto>" && claude
 ```
 
 La plantilla se puede cambiar con la variable de entorno `CODEX_TEMPLATE_REPO` (formato `owner/repo`).
+
+## Reportar bugs y enviar feedback
+
+- `/codex-brand:report-bug` — reporta un error o una fricción mientras trabajas una marca.
+- `/codex-brand:feedback` — propone una mejora al flujo de Codex.
+
+Claude toma el contexto de la sesión (marca, proyecto, framework, pieza, archivos relacionados) y los
+datos técnicos (tu nombre y correo de git, sistema operativo, versiones de Claude Code, del plugin y del
+arnés, modelo, fecha), te pregunta solo lo que falta, **una pregunta a la vez**, y te muestra una vista
+previa. Solo envía si confirmas. El reporte llega al canal del equipo como un archivo HTML
+autocontenido, generado por `scripts/send_report.py` (Python 3, sin dependencias).
+
+- **Destino:** el webhook del canal se lee de `config/report.json` (`webhookUrl`); se puede reemplazar con la
+  variable de entorno `CODEX_REPORT_WEBHOOK_URL`.
+- **Si no se puede enviar** (sin red, proxy, webhook inválido), el HTML queda guardado en
+  `~/.codex-ocx/reports-pending/` y se reintenta automáticamente la próxima vez que envíes un reporte o
+  feedback. Si tu red usa proxy, debe permitir `*.powerplatform.com`.
+- Nunca se escriben archivos del reporte dentro de tu proyecto; se usa una carpeta temporal.
 
 ## `codex-lock.json`
 
