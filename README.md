@@ -68,6 +68,10 @@ cd ~/Proyectos/nombre-del-proyecto && claude
   referencias) y lo organiza. Cuando digas "listo, no tengo más", hace una pieza de prueba.
 - **Ejecución:** con la marca aprobada, le pides las piezas que necesites.
 
+Para ver una pieza o un framework, pídele a Claude que lo abra: se abre en **Google Chrome**. Claude no
+abre carpetas ni comparte cómo funciona Codex por dentro (skills, reglas, archivos internos); todo lo
+de tu marca sí está disponible.
+
 ### Problemas comunes
 
 | Mensaje o problema | Solución |
